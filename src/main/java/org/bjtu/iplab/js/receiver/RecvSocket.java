@@ -23,8 +23,6 @@ public class RecvSocket {
         return recv_packet_info_bytes;
     }
 
-    int seqNum = 0;
-
     public ByteBuffer recvByteBuffer() throws IOException {
         ByteBuffer byteBuffer = ByteBuffer.allocate(1500);
         datagramChannelRecver.receive(byteBuffer);
