@@ -41,6 +41,13 @@ public class StreamRecvServer {
             ByteArrayModule sps_pps_nalu_bytes = transitToModule(receverPacket.sps_pps_nalu_bytes);
             ByteArrayModule general_nalu_bytes = transitToModule(receverPacket.general_nalu_bytes);
             recvNaluMap.put(gop_num, sps_pps_nalu_bytes);
+            if (recvNaluMap.containsKey(packet_num)) {
+                byte[] nalue = recvNaluMap.get(packet_num).bytes;
+                System.out.println("*****************:" + nalue.length + " exited is drop? " + nalue[nalue.length -1]+" this is drop? " + general_nalu_bytes.bytes[general_nalu_bytes.bytes.length - 1]);
+                if (nalue.length == 1 | nalue[nalue.length -1] != 0) {
+                    continue;
+                }
+            }
             recvNaluMap.put(packet_num, general_nalu_bytes);
         } while (receverPacket.gop_num != 10000);
 
@@ -67,16 +74,26 @@ public class StreamRecvServer {
     public static void main(String[] args) throws IOException {
         if (args[0].equals("simple")) {
             System.out.println("you are run simple receiver");
-            StreamRecvServer streamRecvServer = new StreamRecvServer("./RaceHorses_832x480_30_512_simple.h264", 4321);
+            StreamRecvServer streamRecvServer = new StreamRecvServer("G:\\WORK_FILE\\RTCLab\\SteamDropSim\\output\\RaceHorses_832x480_30_1024_simple.h264", 4321);
             streamRecvServer.recvAndSaveSimple();
         } else if (args[0].equals("gop")) {
             System.out.println("you are run gop receiver");
-            StreamRecvServer streamRecvServer = new StreamRecvServer("./RaceHorses_832x480_30_512_gop.h264", 4321);
+            //StreamRecvServer streamRecvServer = new StreamRecvServer("G:\\WORK_FILE\\RTCLab\\SteamDropSim\\output\\RaceHorses_832x480_30_1024_gop.h264", 4321);
+            //StreamRecvServer streamRecvServer = new StreamRecvServer("G:\\WORK_FILE\\RTCLab\\SteamDropSim\\output\\MOBILE_352x288_30_avc_384_gop.h264", 4321);
+            //StreamRecvServer streamRecvServer = new StreamRecvServer("G:\\WORK_FILE\\RTCLab\\SteamDropSim\\output\\CITY_352x288_30_avc_512_gop.h264", 4321);
+            StreamRecvServer streamRecvServer = new StreamRecvServer("G:\\WORK_FILE\\RTCLab\\SteamDropSim\\output\\BUS_352x288_30_avc_512_gop.h264", 4321);
             streamRecvServer.recvAndSave();
         } else if (args[0].equals("uep")) {
             System.out.println("you are run uep receiver");
-            StreamRecvServer streamRecvServer = new StreamRecvServer("./RaceHorses_832x480_30_512_uep.h264", 4321);
+            //StreamRecvServer streamRecvServer = new StreamRecvServer("G:\\WORK_FILE\\RTCLab\\SteamDropSim\\output\\RaceHorses_832x480_30_1024_uep.h264", 4321);
+            //StreamRecvServer streamRecvServer = new StreamRecvServer("G:\\WORK_FILE\\RTCLab\\SteamDropSim\\output\\CITY_352x288_30_avc_512_uep.h264", 4321);
+            StreamRecvServer streamRecvServer = new StreamRecvServer("G:\\WORK_FILE\\RTCLab\\SteamDropSim\\output\\BUS_352x288_30_avc_512_uep.h264", 4321);
+            //StreamRecvServer streamRecvServer = new StreamRecvServer("G:\\WORK_FILE\\RTCLab\\SteamDropSim\\output\\MOBILE_352x288_30_avc_384_uep.h264", 4321);
             streamRecvServer.recvAndSave();
+        } else if (args[0].equals("nonalu")) {
+            System.out.println("you are run nonalue receiver");
+            StreamRecvServer streamRecvServer = new StreamRecvServer("G:\\WORK_FILE\\RTCLab\\SteamDropSim\\output\\RaceHorses_832x480_30_1024_nanalue.h264", 4321);
+            streamRecvServer.recvAndSaveSimple();
         }
         System.out.println("OK");
     }

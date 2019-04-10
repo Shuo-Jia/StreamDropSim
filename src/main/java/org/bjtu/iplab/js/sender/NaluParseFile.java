@@ -13,9 +13,26 @@ public class NaluParseFile {
     private byte[] tempReadBuf = new byte[1024000];
 
     public NaluParseFile(String fileUrl) throws FileNotFoundException {
-        fileInputRandomStream = new RandomAccessFile(fileUrl,"rw");
+        fileInputRandomStream = new RandomAccessFile(fileUrl, "rw");
     }
 
+    int pos = 0;
+    public byte[] getMTUpayload() throws IOException {
+        byte[] temp = new byte[1400];
+        int res = 1;
+        int offset = 0;
+        while (res == 1 && offset != 1400) {
+            res = fileInputRandomStream.read(temp, offset, 1);
+            offset++;
+            pos++;
+        }
+        if (res != 1) {
+
+            isAvaliable = false;
+        }
+        fileInputRandomStream.seek(pos);
+        return temp;
+    }
 
     public NaluInfo getNextNalu(int pre_end_offset) throws IOException {
         naluInfo = new NaluInfo();
@@ -34,7 +51,7 @@ public class NaluParseFile {
                 tempBuf_pos = 3;
                 naluInfo.startLen = 3;
             } else {
-                if (fileInputRandomStream.read(tempReadBuf, tempBuf_pos+3, 1) != 1) {
+                if (fileInputRandomStream.read(tempReadBuf, tempBuf_pos + 3, 1) != 1) {
                     return new NaluInfo();
                 } else {
                     tempBuf_pos = 4;
@@ -48,12 +65,16 @@ public class NaluParseFile {
             if (fileInputRandomStream.read(tempReadBuf, tempBuf_pos++, 1) == -1) {
                 isAvaliable = false;
 
-                naluInfo.length = tempBuf_pos;
-                naluInfo.payload = new byte[naluInfo.length];
-                System.arraycopy(tempReadBuf, 0, naluInfo.payload, 0, naluInfo.length);
-                naluInfo.forbidden_bit = naluInfo.payload[naluInfo.startLen] & 0x80;
-                naluInfo.nal_reference_idc = naluInfo.payload[naluInfo.startLen] & 0x60;
-                naluInfo.nal_reference_idc = naluInfo.payload[naluInfo.startLen] & 0x1f;
+                naluInfo.length_with_start = tempBuf_pos;
+                naluInfo.startload = new byte[naluInfo.startLen];
+                naluInfo.payload = new byte[naluInfo.length_with_start -naluInfo.startLen];
+                naluInfo.allDataload = new byte[naluInfo.length_with_start];
+                System.arraycopy(tempReadBuf,0,naluInfo.startload,0,naluInfo.startLen);
+                System.arraycopy(tempReadBuf, naluInfo.startLen, naluInfo.payload, 0, naluInfo.length_with_start -naluInfo.startLen);
+                System.arraycopy(tempReadBuf,0,naluInfo.allDataload,0,naluInfo.length_with_start);
+                naluInfo.forbidden_bit = naluInfo.payload[0] & 0x80;
+                naluInfo.nal_reference_idc = naluInfo.payload[0] & 0x60;
+                naluInfo.nal_unit_type = naluInfo.payload[0] & 0x1f;
                 return naluInfo;
             }
 
@@ -66,13 +87,16 @@ public class NaluParseFile {
 
         fileInputRandomStream.seek(naluInfo.offset + tempBuf_pos);
 
-        naluInfo.length = tempBuf_pos;
-        naluInfo.payload = new byte[naluInfo.length];
-        System.arraycopy(tempReadBuf, 0, naluInfo.payload, 0, naluInfo.length);
-        naluInfo.forbidden_bit = naluInfo.payload[naluInfo.startLen] & 0x80;
-        naluInfo.nal_reference_idc = naluInfo.payload[naluInfo.startLen] & 0x60;
-        naluInfo.nal_unit_type = naluInfo.payload[naluInfo.startLen] & 0x1f;
-
+        naluInfo.length_with_start = tempBuf_pos;
+        naluInfo.startload = new byte[naluInfo.startLen];
+        naluInfo.payload = new byte[naluInfo.length_with_start -naluInfo.startLen];
+        naluInfo.allDataload = new byte[naluInfo.length_with_start];
+        System.arraycopy(tempReadBuf,0,naluInfo.startload,0,naluInfo.startLen);
+        System.arraycopy(tempReadBuf, naluInfo.startLen, naluInfo.payload, 0, naluInfo.length_with_start -naluInfo.startLen);
+        System.arraycopy(tempReadBuf,0,naluInfo.allDataload,0,naluInfo.length_with_start);
+        naluInfo.forbidden_bit = naluInfo.payload[0] & 0x80;
+        naluInfo.nal_reference_idc = naluInfo.payload[0] & 0x60;
+        naluInfo.nal_unit_type = naluInfo.payload[0] & 0x1f;
         return naluInfo;
     }
 
@@ -85,6 +109,6 @@ public class NaluParseFile {
     }
 
     private boolean findStartCode4(byte[] bytes, int pos) {
-        return !((bytes[pos] != 0) || (bytes[pos+1] != 0) || (bytes[pos+2] != 0) || (bytes[pos+3] != 1));
+        return !((bytes[pos] != 0) || (bytes[pos + 1] != 0) || (bytes[pos + 2] != 0) || (bytes[pos + 3] != 1));
     }
 }
